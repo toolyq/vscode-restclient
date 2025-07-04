@@ -159,8 +159,8 @@ export class HttpClient {
                 const pass = args.join(' ');
                 if (normalizedScheme === 'basic') {
                     removeHeader(options.headers!, 'Authorization');
-                    options.username = user;
-                    options.password = pass;
+                    // Revert to old auth format for Got v11 compatibility with @ symbols
+                    options.headers!['Authorization'] = `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`;
                 } else if (normalizedScheme === 'digest') {
                     removeHeader(options.headers!, 'Authorization');
                     options.hooks!.afterResponse!.push(digest(user, pass));
@@ -173,9 +173,8 @@ export class HttpClient {
                 }
             } else if (normalizedScheme === 'basic' && user.includes(':')) {
                 removeHeader(options.headers!, 'Authorization');
-                const [username, password] = user.split(':');
-                options.username = username;
-                options.password = password;
+                // Revert to old auth format for Got v11 compatibility with @ symbols
+                options.headers!['Authorization'] = `Basic ${Buffer.from(user).toString('base64')}`;
             }
         }
 

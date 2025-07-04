@@ -79,7 +79,7 @@ export class CurlRequestParser implements RequestParser {
             method = body ? "POST" : "GET";
         }
 
-        return new HttpRequest(method, url, headers, body, body, name);
+        return new HttpRequest(method, url, headers, body, body, name, undefined);
     }
 
     private static mergeIntoSingleLine(text: string): string {

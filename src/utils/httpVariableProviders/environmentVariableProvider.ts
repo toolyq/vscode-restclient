@@ -48,8 +48,8 @@ export class EnvironmentVariableProvider implements HttpVariableProvider {
             environmentName = EnvironmentController.sharedEnvironmentName;
         }
         const variables = this._settings.environmentVariables;
-        const currentEnvironmentVariables = variables[environmentName];
-        const sharedEnvironmentVariables = variables[EnvironmentController.sharedEnvironmentName];
+        const currentEnvironmentVariables = variables[environmentName] || {};
+        const sharedEnvironmentVariables = variables[EnvironmentController.sharedEnvironmentName] || {};
 
         // Resolve mappings from shared environment
         this.mapEnvironmentVariables('shared', sharedEnvironmentVariables, sharedEnvironmentVariables);
@@ -61,6 +61,11 @@ export class EnvironmentVariableProvider implements HttpVariableProvider {
     }
 
     private mapEnvironmentVariables(environment: string, current: { [key: string]: string }, shared: { [key: string]: string }) {
+        // Add null/undefined checks
+        if (!current || !shared) {
+            return;
+        }
+        
         for (const [key, value] of Object.entries(current)) {
             const variableRegex = new RegExp(`\\{{2}\\$${environment} (.+?)\\}{2}`);
             const match = variableRegex.exec(value);
@@ -71,9 +76,11 @@ export class EnvironmentVariableProvider implements HttpVariableProvider {
 
             const referenceKey = match[1].trim();
 
-            current[key] = current[key]!.replace(
-                variableRegex,
-                shared[referenceKey]!);
+            if (shared[referenceKey]) {
+                current[key] = current[key]!.replace(
+                    variableRegex,
+                    shared[referenceKey]!);
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ import { UserDataManager } from '../utils/userDataManager';
 import { getCurrentTextDocument } from '../utils/workspaceUtility';
 import { HttpResponseTextDocumentView } from '../views/httpResponseTextDocumentView';
 import { HttpResponseWebview } from '../views/httpResponseWebview';
+import { ScriptExecutor } from '../utils/scriptExecutor';
 
 export class RequestController {
     private _requestStatusEntry: RequestStatusEntry;
@@ -110,6 +111,27 @@ export class RequestController {
 
             if (httpRequest.name && document) {
                 RequestVariableCache.add(document, httpRequest.name, response);
+            }
+
+            // Execute script if present
+            Logger.info('[Request Controller] Checking for script...');
+            Logger.info('[Request Controller] Script exists:', !!httpRequest.script);
+            if (httpRequest.script) {
+                Logger.info('[Request Controller] Script length:', httpRequest.script.length);
+                Logger.info('[Request Controller] Script content preview:', httpRequest.script.substring(0, 100));
+            }
+            
+            if (httpRequest.script && httpRequest.script.trim()) {
+                try {
+                    Logger.info('[Request Controller] Executing script...');
+                    await ScriptExecutor.executeScript(httpRequest.script, httpRequest, response);
+                    Logger.info('[Request Controller] Script execution completed');
+                } catch (scriptError) {
+                    Logger.error('Failed to execute script:', scriptError);
+                    window.showErrorMessage(`Script execution failed: ${scriptError.message}`);
+                }
+            } else {
+                Logger.info('[Request Controller] No script to execute');
             }
 
             try {

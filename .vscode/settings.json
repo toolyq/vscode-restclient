@@ -7,5 +7,13 @@
         "out": true // set this to false to include "out" folder in search results
     },
     "editor.renderWhitespace": "all",
-    "typescript.tsdk": "./node_modules/typescript/lib" // we want to use the TS server from our node_modules folder to control its version
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "rest-client.logLevel": "info",
+    "rest-client.environmentVariables": {
+        "$shared": {
+            "manual_test": "manual-value-123"
+        }
+    },
+    "C_Cpp.loggingLevel": "Information",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt" // we want to use the TS server from our node_modules folder to control its version
 }

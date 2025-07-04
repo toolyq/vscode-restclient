@@ -18,6 +18,7 @@ enum ParseState {
     URL,
     Header,
     Body,
+    Script,
 }
 
 export class HttpRequestParser implements RequestParser {
@@ -25,6 +26,8 @@ export class HttpRequestParser implements RequestParser {
     private readonly queryStringLinePrefix = /^\s*[&\?]/;
     private readonly inputFileSyntax = /^<(?:(?<processVariables>@)(?<encoding>\w+)?)?\s+(?<filepath>.+?)\s*$/;
     private readonly defaultFileEncoding = 'utf8';
+    private readonly scriptStartSyntax = /^\s*>\s*\{\s*%\s*$/;
+    private readonly scriptEndSyntax = /^\s*%\s*\}\s*$/;
 
     public constructor(private readonly requestRawText: string, private readonly settings: IRestClientSettings) {
     }
@@ -37,6 +40,7 @@ export class HttpRequestParser implements RequestParser {
         const headersLines: string[] = [];
         const bodyLines: string[] = [];
         const variableLines: string[] = [];
+        const scriptLines: string[] = [];
 
         let state = ParseState.URL;
         let currentLine: string | undefined;
@@ -67,7 +71,21 @@ export class HttpRequestParser implements RequestParser {
                     }
                     break;
                 case ParseState.Body:
-                    bodyLines.push(currentLine);
+                    // Check if this is the start of a script block
+                    if (this.scriptStartSyntax.test(currentLine)) {
+                        state = ParseState.Script;
+                    } else {
+                        bodyLines.push(currentLine);
+                    }
+                    break;
+                case ParseState.Script:
+                    // Check if this is the end of a script block
+                    if (this.scriptEndSyntax.test(currentLine)) {
+                        // End of script block, no more parsing
+                        break;
+                    } else {
+                        scriptLines.push(currentLine);
+                    }
                     break;
             }
         }
@@ -122,7 +140,10 @@ export class HttpRequestParser implements RequestParser {
             requestLine.url = `${scheme}://${host}${requestLine.url}`;
         }
 
-        return new HttpRequest(requestLine.method, requestLine.url, headers, body, bodyLines.join(EOL), name);
+        // parse script block
+        const script = scriptLines.length > 0 ? scriptLines.join(EOL) : undefined;
+
+        return new HttpRequest(requestLine.method, requestLine.url, headers, body, bodyLines.join(EOL), name, script);
     }
 
     private async createGraphQlBody(variableLines: string[], contentTypeHeader: string | undefined, body: string | Stream | undefined) {
@@ -202,7 +223,7 @@ export class HttpRequestParser implements RequestParser {
                         if (fileAbsolutePath) {
                             if (groupsValues.processVariables) {
                                 const buffer = await fs.readFile(fileAbsolutePath);
-                                const fileContent = buffer.toString((groupsValues.encoding || this.defaultFileEncoding) as BufferEncoding);
+                                const fileContent = buffer.toString(groupsValues.encoding as any || this.defaultFileEncoding);
                                 const resolvedContent = await VariableProcessor.processRawRequest(fileContent);
                                 combinedStream.append(resolvedContent);
                             } else {

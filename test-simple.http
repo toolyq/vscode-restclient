@@ -1,0 +1,25 @@
+### 简单的 JSON 测试 - 不依赖特定数据结构
+GET https://httpbin.org/get
+
+> {%
+console.log("=== 脚本开始执行 ===");
+if (response.json) {
+    console.log("JSON 解析成功!");
+    console.log("JSON 对象键:", Object.keys(response.json));
+    
+    // httpbin.org/get 返回的标准字段
+    if (response.json.url) {
+        let val = response.json.origin;
+        // 保存一个简单的值而不是完整URL
+        await client.global.set("aaa", val);
+    }    
+}
+
+%}
+
+
+### 测试变量在 URL 中的使用
+# First check if variable is available before making request
+# Variable should be set from the previous request: simple_test = "hello-world"
+GET https://httpbin.org/get?saved_url={{aaa}}
+

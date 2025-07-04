@@ -1,0 +1,32 @@
+### 第一步：设置变量
+GET https://httpbin.org/get
+
+> {%
+console.log("=== 设置变量 ===");
+await client.global.set("debug_var", "test-123456");
+console.log("变量已设置完成");
+%}
+
+### 第二步：检查变量（应该能获取到）
+GET https://httpbin.org/get
+
+> {%
+console.log("=== 检查变量 ===");
+const value = await client.global.get("debug_var");
+console.log("获取到的变量值:", value);
+%}
+
+### 第三步：在URL中使用变量
+GET https://httpbin.org/get?test={{aaa}}
+
+> {%
+console.log("=== URL中使用变量 ===");
+if (response.json && response.json.args && response.json.args.test) {
+    console.log("✅ URL变量传递成功:", response.json.args.test);
+} else {
+    console.log("❌ URL变量传递失败");
+    if (response.json && response.json.args) {
+        console.log("实际获得的参数:", response.json.args);
+    }
+}
+%}

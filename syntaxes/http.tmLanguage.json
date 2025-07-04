@@ -8,6 +8,26 @@
   "name": "http",
   "patterns": [
     {
+      "begin": "^\\s*>\\s*\\{\\s*%\\s*$",
+      "name": "http.request.script.javascript",
+      "end": "^\\s*%\\s*\\}\\s*$",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.script.begin.http"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.script.end.http"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.js"
+        }
+      ]
+    },
+    {
       "begin": "^\\s*(?=curl)",
       "name": "http.request.curl",
       "end": "^\\s*(\\#{3,}.*?)?\\s*$",

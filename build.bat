@@ -1,3 +1,6 @@
+::npm install --save-dev webpack webpack-cli
+
+
 @echo off
 echo Building REST Client Extension...
 
